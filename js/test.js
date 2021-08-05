@@ -84,7 +84,7 @@ $groupSelector.onchange = function(e) {
     var groupData = getFilteredData(data, group);
 
     updatePoints(groupData);
-    // enterPoints(groupData);
-    // exitPoints(groupData);
+    enterPoints(groupData);
+    exitPoints(groupData);
 
 };
