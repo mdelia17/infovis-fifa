@@ -10,13 +10,45 @@
 </head>
 <body>
 <label>
-  Group
-  <select class="group-select">
-    <option value=1 selected>1</option>
-    <option value=2>2</option>
-    <option value=3>3</option>
+  Campionato
+  <select id="campionato">
+    <option value="English Premier League" selected>English Premier League</option>
+    <option value="French Ligue 1">French Ligue 1</option>
+    <option value="German 1. Bundesliga">German 1. Bundesliga</option>
+    <option value="Spain Primera Division">Spain Primera Division</option>
+    <option value="Italian Serie A">Italian Serie A</option>
   </select>
+
+  Ruolo
+  <select id="ruolo">
+    <option value="Portiere">Portiere</option>
+    <option value="Difensore">Difensore</option>
+    <option value="Terzino Sx">Terzino Sx</option>
+    <option value="Terzino Dx">Terzino Dx</option>
+    <option value="Centrocampista">Centrocampista</option>
+    <option value="Esterno Sx">Esterno Sx</option>
+    <option value="Esterno Dx">Esterno Dx</option>
+    <option value="Attaccante" selected>Attaccante</option>
+  </select>
+
+  Caratteristiche
+  <select id="caratteristiche">
+    <option value="punti_portiere">Portiere</option>
+    <option value="punti_difesa">Difesa</option>
+    <option value="punti_attacco" selected>Attacco</option>
+    <option value="punti_tecnica">Tecnica</option>
+    <option value="punti_potenza">Potenza</option>
+    <option value="punti_velocita">Velocità</option>
+    <option value="punti_mentalita">Mentalità</option>
+  </select>
+
+  Budget
+  <input type="text" id="budget" value="67500000">
+  
 </label>
+<button type="button" id="player_button">Submit</button> 
+
+<div id="my_dataviz"></div>
 
 <script src="js/fifa.js"></script>
 
