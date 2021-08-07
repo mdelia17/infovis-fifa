@@ -4,11 +4,13 @@
 <head>
 <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
 <meta content="utf-8" http-equiv="encoding">
+<link rel="stylesheet" type="text/css" href="css/style.css">
 <script src="lib/d3.v6.min.js"></script>
 <script src="lib/d3.v6.js"></script>
 
 </head>
 <body>
+<div>
 <label>
   Campionato
   <select id="campionato">
@@ -50,9 +52,18 @@
   <input type="text" id="budget" value="67500000">
   
 </label>
-<button type="button" id="player_button">Submit</button> 
+<button type="button" id="player_button">Cerca</button> 
+</div>
 
 <div id="player_div"></div>
+
+<div>
+Squadra Avversaria
+  <select id="squadra_avversaria">
+  </select>
+  <button type="button" id="team_button">Confronta</button> 
+</div>
+
 
 <script src="js/fifa.js"></script>
 

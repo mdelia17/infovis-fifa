@@ -28,27 +28,15 @@ d3.json("data/players.json")
 function main(data) {
     console.log(dataset)
     updateTeams()
+    updateOpponentTeams()
     players = searchPlayers(dataset)
     drawXAxis(players)
     drawYAxis(players)
     drawBarChartPlayers(players)
     document.getElementById("player_button").onclick = function() {updateSearch()}
     document.getElementById("campionato").onchange = function() {updateTeams()}
+    document.getElementById("team_button").onclick = function() {compareTeams()}
 
-}
-
-// funzione per prendere i giocatori a seconda dei filtri impostati
-function getFilteredPlayers(data, squadra, ruolo, caratteristiche, budget, k) {
-    filtered = data.filter(function(player) { return player.player_positions.includes(ruolo) && player.club_name != squadra &&  player.value_eur <= budget; });
-    sorted = filtered.sort(function(b, a) {return d3.descending(b[caratteristiche], a[caratteristiche]);});
-    top_k = sorted.slice(0, k);
-    return top_k
-}
-
-// funzione per prendere le squadre a seconda del campionato selezionato
-function getFilteredTeams(data, campionato) {
-  filtered = data.filter(function(team) { return team.league_name == campionato; });
-  return filtered
 }
 
 function drawBarChartPlayers(data) {
@@ -77,6 +65,8 @@ function drawBarChartPlayers(data) {
         .attr("height", d => height - y(d[document.getElementById("caratteristiche").value]))
         .attr("fill", "#69b3a2")
         .attr("class", "bar")
+        .attr('stroke-width', 0)
+        .attr("stroke", "#404040")
         .on("mouseover", function(event, d) {
           tooltip
               .html(drawTooltip(d))
@@ -91,6 +81,11 @@ function drawBarChartPlayers(data) {
         .on("mouseleave", function(event, d) {
           tooltip
             .style("opacity", 0)
+        })
+        .on('click', function(event, d) {
+          d3.selectAll(".bar").attr("opacity",0.4).attr('stroke-width', 0)
+          d3.select(this).attr("opacity",1).attr('stroke-width', 1.2)
+          d3.select(".detail").html(drawDetail(d))
         })
 
     // Labels
@@ -122,7 +117,8 @@ function drawBarChartPlayers(data) {
       .style("height", "200px")
       .style("font-size","12px")
       .style("font-family","Verdana")
-      .html(drawDetail(data[0]))
+      .html("Scheda Giocatore")
+      // .html(drawDetail(data[0]))
   }
 
 
@@ -136,7 +132,7 @@ function updateBarChartPlayers(data) {
           .style("text-anchor", "end")
           .attr("font-family","Verdana")
 
-  d3.select(".detail").html(drawDetail(data[0]))
+  d3.select(".detail").html("Scheda Giocatore")
 
   // Create the u variable
   var u = svg.selectAll(".bar")
@@ -152,7 +148,7 @@ function updateBarChartPlayers(data) {
       .attr("width", x.bandwidth())
       .attr("height", function(d) { return height - y(d[document.getElementById("caratteristiche").value]); })
       .attr("fill", "#69b3a2")
-      .attr("class", "bar")
+      .attr("class", "bar")  
 
   // If less group in the new dataset, I delete the ones not in use anymore
   u.exit()
@@ -203,6 +199,35 @@ svg.append("g")
   .attr("font-family","Verdana")
 }
 
+// funzione per prendere i giocatori a seconda dei filtri impostati
+function getFilteredPlayers(data, squadra, ruolo, caratteristiche, budget, k) {
+  filtered = data.filter(function(player) { return player.player_positions.includes(ruolo) && player.club_name != squadra &&  player.value_eur <= budget; });
+  sorted = filtered.sort(function(b, a) {return d3.descending(b[caratteristiche], a[caratteristiche]);});
+  top_k = sorted.slice(0, k);
+  if (top_k.length < k) {
+    l = top_k.length
+    b_filtered = data.filter(function(player) { return player.player_positions.includes(ruolo) && player.club_name != squadra &&  player.value_eur > budget; });
+    b_sorted = b_filtered.sort(function(b, a) {return d3.ascending(b.value_eur, a.value_eur);});
+    top_l = b_sorted.slice(0, k-l);
+    concated = top_k.concat(top_l);
+    concated = concated.sort(function(b, a) {return d3.descending(b[caratteristiche], a[caratteristiche]);});
+    return concated;
+  }
+  return top_k
+}
+
+// funzione per prendere le squadre a seconda del campionato selezionato
+function getFilteredTeams(data, campionato) {
+  filtered = data.filter(function(team) { return team.league_name == campionato; });
+  return filtered
+}
+
+// funzione per prendere tutte le squadre avversarie della squadra scelta nello stesso campionato
+function getOpponentTeams(data, campionato, squadra) {
+  filtered = data.filter(function(team) { return team.league_name == campionato && team.club_name != squadra});
+  return filtered
+}
+
 function searchPlayers() {
     squadra = document.getElementById("squadra").value;
     ruolo = document.getElementById("ruolo").value;
@@ -214,6 +239,8 @@ function searchPlayers() {
 }
 
 function updateSearch() {
+    resetSelectedBar()
+    updateOpponentTeams()
     squadra = document.getElementById("squadra").value;
     ruolo = document.getElementById("ruolo").value;
     caratteristiche = document.getElementById("caratteristiche").value;
@@ -233,11 +260,31 @@ function updateTeams() {
     document.getElementById('squadra').options.add(new Option(filtered_teams[index].club_name,filtered_teams[index].club_name,false,false), index)}
 }
 
+function updateOpponentTeams() {
+  campionato = document.getElementById("campionato").value;
+  squadra = document.getElementById("squadra").value;
+  filtered_opponent_teams = getOpponentTeams(teams, campionato, squadra)
+  // console.log(filtered_opponent_teams)
+  while(document.getElementById('squadra_avversaria').options.length)
+    document.getElementById('squadra_avversaria').options.remove(0);
+  for (index = 0; index < filtered_opponent_teams.length; index++) {
+    document.getElementById('squadra_avversaria').options.add(new Option(filtered_opponent_teams[index].club_name,filtered_opponent_teams[index].club_name,false,false), index)}
+}
+
 function drawTooltip(player) {
   return ("Portiere: " + player.punti_portiere
   + "<br>" + "Difesa: " + player.punti_difesa + "<br>" + "Attacco: " + player.punti_attacco + "<br>" + "Tecnica: " + player.punti_tecnica + "<br>" + "Potenza: " + player.punti_potenza + "<br>" + "Velocità: " + player.punti_velocita + "<br>" + "Mentalità: " + player.punti_mentalita)
 }
 
 function drawDetail(player) {
-  return ("Scheda giocatore <br><br>" + "Nome: " + player.short_name + "<br>" + "Età: " + player.age + "<br>" + "Overall: " + player.overall + "<br>" + "Altezza: " + player.height_cm + "<br>" + "Peso: " + player.weight_kg + "<br>" + "Ruolo: " + player.player_positions + "<br>" + "Squadra: " + player.club_name + "<br>" + "Campionato: " + player.league_name + "<br>" + "Valore (€): " + player.value_eur + "<br>" + "Budget rimanente (€): " + (document.getElementById("budget").value - player.value_eur))
+  return ("Scheda Giocatore <br><br>" + "Nome: " + player.short_name + "<br>" + "Età: " + player.age + "<br>" + "Overall: " + player.overall + "<br>" + "Altezza: " + player.height_cm + "<br>" + "Peso: " + player.weight_kg + "<br>" + "Ruolo: " + player.player_positions + "<br>" + "Squadra: " + player.club_name + "<br>" + "Campionato: " + player.league_name + "<br>" + "Valore (€): " + player.value_eur + "<br>" + "Budget rimanente (€): " + (document.getElementById("budget").value - player.value_eur))
+}
+
+function resetSelectedBar() {
+  d3.selectAll(".bar").attr("opacity",1).attr('stroke-width', 0)
+  d3.select(".detail").html("Scheda Giocatore")
+}
+
+function compareTeams() {
+  // to do
 }
