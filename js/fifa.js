@@ -2,19 +2,41 @@ var dataset; // global
 var teams; 
 var x;
 var y;
+var x_2;
+var y_2;
+var color;
+var xSubgroup;
+
+var current_team;
+
+var groups;
+var subgroups;
 
 // set the dimensions and margins of the graph
 const margin = {top: 30, right: 30, bottom: 90, left: 60},
     width = 460 - margin.left - margin.right,
     height = 400 - margin.top - margin.bottom;
 
+// set the dimensions and margins of the graph
+const margin_2 = {top: 30, right: 30, bottom: 90, left: 60},
+    width_2 = 800 - margin_2.left - margin_2.right,
+    height_2 = 400 - margin_2.top - margin_2.bottom;
+
 // append the svg object to the body of the page
-const svg = d3.select("#player_div")
+const svg_1 = d3.select("#player_div")
   .append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
     .attr("transform", `translate(${margin.left}, ${margin.top})`);
+
+// append the svg object to the body of the page
+const svg_2 = d3.select("#team_div")
+  .append("svg")
+    .attr("width", width_2 + margin_2.left + margin_2.right)
+    .attr("height", height_2 + margin_2.top + margin_2.bottom)
+  .append("g")
+    .attr("transform",`translate(${margin_2.left},${margin_2.top})`);
 
 d3.json("data/players.json")
 	.then(function(data) {
@@ -37,6 +59,20 @@ function main(data) {
     document.getElementById("campionato").onchange = function() {updateTeams()}
     document.getElementById("team_button").onclick = function() {compareTeams()}
 
+
+    current_team = document.getElementById("squadra").value
+    team_2 = document.getElementById("squadra_avversaria").value
+
+    teams_to_compare = getFilteredTeamsToCompare(teams, current_team, team_2)
+    groups = teams_to_compare.map(d => d.club_name)
+    subgroups = ["punti_portiere","punti_attacco","punti_difesa","punti_tecnica","punti_velocita","punti_mentalita","punti_potenza"]
+    drawXAxis2(teams_to_compare)
+    drawYAxis2(teams_to_compare)
+    drawXAxis2Subgroup(teams_to_compare)
+    drawColorAxis(teams_to_compare)
+
+    drawGroupedBarChartTeams(teams_to_compare)
+
 }
 
 function drawBarChartPlayers(data) {
@@ -55,7 +91,7 @@ function drawBarChartPlayers(data) {
       .style("font-family","Verdana")
 
     // Bars
-    svg.selectAll(".bar")
+    svg_1.selectAll(".bar")
       .data(data)
       .enter()
       .append("rect")
@@ -89,7 +125,7 @@ function drawBarChartPlayers(data) {
         })
 
     // Labels
-    svg.selectAll(".text")        
+    svg_1.selectAll(".text")        
       .data(data)
       .enter()
       .append("text")
@@ -119,13 +155,13 @@ function drawBarChartPlayers(data) {
       .style("font-family","Verdana")
       .html("Scheda Giocatore")
       // .html(drawDetail(data[0]))
-  }
+}
 
 
 function updateBarChartPlayers(data) {
   // Update the X axis
   x.domain(data.map(function(d) { return d.short_name; }))
-  svg.select(".x_axis")
+  svg_1.select(".x_axis")
       .call(d3.axisBottom(x))
       .selectAll("text")
           .attr("transform", "translate(-10,0)rotate(-45)")
@@ -135,7 +171,7 @@ function updateBarChartPlayers(data) {
   d3.select(".detail").html("Scheda Giocatore")
 
   // Create the u variable
-  var u = svg.selectAll(".bar")
+  var u = svg_1.selectAll(".bar")
     .data(data)
 
   u.enter()
@@ -154,7 +190,7 @@ function updateBarChartPlayers(data) {
   u.exit()
     .remove()
 
-  var v = svg.selectAll(".label")
+  var v = svg_1.selectAll(".label")
     .data(data)
 
   v.enter()
@@ -179,7 +215,7 @@ function drawXAxis(data) {
   .range([ 0, width ])
   .domain(data.map(d => d.short_name))
   .padding(0.2);
-svg.append("g")
+svg_1.append("g")
   .attr("transform", `translate(0, ${height})`)
   .call(d3.axisBottom(x))
   .attr("class", "x_axis")
@@ -190,13 +226,108 @@ svg.append("g")
 }
 
 function drawYAxis(data) {
-  y=  d3.scaleLinear()
+  y =  d3.scaleLinear()
   .domain([0, 99])
   .range([ height, 0]);
-svg.append("g")
+svg_1.append("g")
   .call(d3.axisLeft(y))
   .attr("class", "y_axis")
   .attr("font-family","Verdana")
+}
+
+function drawXAxis2(data) {
+  x_2 = d3.scaleBand()
+      .range([0, width_2])
+      .domain(groups)
+      .padding([0.2])
+  svg_2.append("g")
+    .attr("class", "x_axis2")
+    .attr("transform", `translate(0, ${height_2})`)
+    .call(d3.axisBottom(x_2))
+    .selectAll("text")
+      .attr("transform", "translate(0,5)")
+      .attr("font-family", "Verdana")
+}
+
+function drawYAxis2(data) {
+  y_2 = d3.scaleLinear()
+    .domain([0, 99])
+    .range([ height_2, 0 ]);
+  svg_2.append("g")
+  .attr("class", "y_axis2")
+    .call(d3.axisLeft(y_2))
+    .attr("font-family", "Verdana")
+}
+
+function drawXAxis2Subgroup(data) {
+  xSubgroup = d3.scaleBand()
+    .domain(subgroups)
+    .range([0, x_2.bandwidth()])
+    .padding([0.05])
+}
+
+function drawColorAxis(data) {
+  color = d3.scaleOrdinal()
+    .domain(subgroups)
+    .range(["#4e79a7","#59a14f","#9c755f","#f28e2b","#edc948","#bab0ac","#e15759"])
+}
+
+function drawGroupedBarChartTeams(teams) {
+
+    svg_2.append("g")
+    .selectAll("g")
+    // Enter in data = loop group per group
+    .data(teams)
+    .join("g")
+      .attr("class", "team_bars")
+      .attr("transform", d => `translate(${x_2(d.club_name)}, 0)`)
+    .selectAll("rect")
+    .data(function(d) { return subgroups.map(function(key) { return {key: key, value: d[key]}; }); })
+    .join("rect")
+      .attr("x", d => xSubgroup(d.key))
+      .attr("y", d => y_2(d.value))
+      .attr("width", xSubgroup.bandwidth())
+      .attr("height", d => height_2 - y_2(d.value))
+      .attr("fill", d => color(d.key))
+      .attr("class","team_bar")
+}
+
+function updateGroupedBarChartTeams(teams) {
+   // Update the X_2 axis
+   x_2.domain(teams.map(function(d) { return d.club_name; }))
+   svg_2.select(".x_axis2")
+       .call(d3.axisBottom(x_2))
+       .selectAll("text")
+        .attr("transform", "translate(0,5)")
+        .attr("font-family", "Verdana")
+
+  // Create the u variable
+  var u = svg_2.selectAll(".team_bars")
+    .data(teams)
+
+  u.enter()
+  .append("g")
+  .merge(u)
+    .attr("class", "team_bars")
+    .attr("transform", d => `translate(${x_2(d.club_name)}, 0)`)
+  .selectAll("rect")
+  .data(function(d) { return subgroups.map(function(key) { return {key: key, value: d[key]}; }); })
+  // .enter()
+  // .append("rect")
+  .merge(d3.selectAll(".team_bar"))
+    .transition() // and apply changes to all of them
+    .duration(3000)
+    .attr("x", d => xSubgroup(d.key))
+    .attr("y", d => y_2(d.value))
+    .attr("width", xSubgroup.bandwidth())
+    .attr("height", d => height_2 - y_2(d.value))
+    .attr("fill", d => color(d.key))
+    .attr("class","team_bar")
+
+
+  // If less group in the new dataset, I delete the ones not in use anymore
+  u.exit()
+    .remove()
 }
 
 // funzione per prendere i giocatori a seconda dei filtri impostati
@@ -228,6 +359,18 @@ function getOpponentTeams(data, campionato, squadra) {
   return filtered
 }
 
+function getFilteredTeamsToCompare(data, team_1, team_2) {
+  filtered = data.filter(function(team) { return team.club_name == team_1 || team.club_name == team_2; });
+  sorted = []
+  if (filtered[0].club_name == team_1) {
+    sorted = [filtered[0], filtered[1]]
+  }
+  else {
+    sorted = [filtered[1], filtered[0]]
+  }
+  return sorted
+}
+
 function searchPlayers() {
     squadra = document.getElementById("squadra").value;
     ruolo = document.getElementById("ruolo").value;
@@ -242,6 +385,7 @@ function updateSearch() {
     resetSelectedBar()
     updateOpponentTeams()
     squadra = document.getElementById("squadra").value;
+    current_team = squadra;
     ruolo = document.getElementById("ruolo").value;
     caratteristiche = document.getElementById("caratteristiche").value;
     budget = document.getElementById("budget").value;
@@ -286,5 +430,7 @@ function resetSelectedBar() {
 }
 
 function compareTeams() {
-  // to do
+  opponent_team_name = document.getElementById('squadra_avversaria').value
+  teams_to_compare = getFilteredTeamsToCompare(teams, current_team, opponent_team_name)
+  updateGroupedBarChartTeams(teams_to_compare)
 }
