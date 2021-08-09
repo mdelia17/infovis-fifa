@@ -11,6 +11,7 @@ var current_team;
 
 var groups;
 var subgroups;
+var legends;
 
 // set the dimensions and margins of the graph
 const margin = {top: 30, right: 30, bottom: 90, left: 60},
@@ -19,7 +20,7 @@ const margin = {top: 30, right: 30, bottom: 90, left: 60},
 
 // set the dimensions and margins of the graph
 const margin_2 = {top: 30, right: 30, bottom: 90, left: 60},
-    width_2 = 800 - margin_2.left - margin_2.right,
+    width_2 = 1000 - margin_2.left - margin_2.right,
     height_2 = 400 - margin_2.top - margin_2.bottom;
 
 // append the svg object to the body of the page
@@ -54,11 +55,6 @@ function main(data) {
     players = searchPlayers(dataset)
     drawXAxis(players)
     drawYAxis(players)
-    drawBarChartPlayers(players)
-    document.getElementById("player_button").onclick = function() {updateSearch()}
-    document.getElementById("campionato").onchange = function() {updateTeams()}
-    document.getElementById("team_button").onclick = function() {compareTeams()}
-
 
     current_team = document.getElementById("squadra").value
     team_2 = document.getElementById("squadra_avversaria").value
@@ -66,63 +62,65 @@ function main(data) {
     teams_to_compare = getFilteredTeamsToCompare(teams, current_team, team_2)
     groups = teams_to_compare.map(d => d.club_name)
     subgroups = ["punti_portiere","punti_attacco","punti_difesa","punti_tecnica","punti_velocita","punti_mentalita","punti_potenza"]
+    legends = ["Portiere","Attacco","Difesa","Tecnica","Velocità","Mentalità","Potenza"]
     drawXAxis2(teams_to_compare)
     drawYAxis2(teams_to_compare)
     drawXAxis2Subgroup(teams_to_compare)
     drawColorAxis(teams_to_compare)
+
+    drawBarChartPlayers(players)
+    document.getElementById("player_button").onclick = function() {updateSearch()}
+    document.getElementById("campionato").onchange = function() {updateTeams()}
+    document.getElementById("team_button").onclick = function() {compareTeams()}
 
     drawGroupedBarChartTeams(teams_to_compare)
 
 }
 
 function drawBarChartPlayers(data) {
-    // Tooltip    
-    var tooltip = d3.select("#player_div")
-      .append("div")
-      .style("opacity", 0)
-      .attr("class", "tooltip")
-      .style("background-color", "white")
-      .style("border", "solid")
-      .style("border-width", "1px")
-      .style("border-radius", "5px")
-      .style("padding", "5px")
-      .style("position", "absolute")
-      .style("font-size","12px")
-      .style("font-family","Verdana")
-
-    // Bars
-    svg_1.selectAll(".bar")
-      .data(data)
-      .enter()
-      .append("rect")
-        .attr("x", d => x(d.short_name))
-        .attr("y", d => y(d[document.getElementById("caratteristiche").value]))
-        .attr("width", x.bandwidth())
-        .attr("height", d => height - y(d[document.getElementById("caratteristiche").value]))
-        .attr("fill", "#69b3a2")
-        .attr("class", "bar")
-        .attr('stroke-width', 0)
-        .attr("stroke", "#404040")
-        .on("mouseover", function(event, d) {
-          tooltip
-              .html(drawTooltip(d))
-              .style("opacity", 1)
-              
-        })
-        .on("mousemove", function(event, d) {
-          tooltip.style("transform","translateY(-55%)")  
-                 .style("left",(event.x)/2+"px")
-                 .style("top",(event.y)/2-30+"px")
-        })
-        .on("mouseleave", function(event, d) {
-          tooltip
-            .style("opacity", 0)
-        })
-        .on('click', function(event, d) {
-          d3.selectAll(".bar").attr("opacity",0.4).attr('stroke-width', 0)
-          d3.select(this).attr("opacity",1).attr('stroke-width', 1.2)
-          d3.select(".detail").html(drawDetail(d))
-        })
+  // Bars
+  svg_1.selectAll(".bar")
+  .data(data)
+  .enter()
+  .append("rect")
+    .attr("x", d => x(d.short_name))
+    .attr("y", d => y(d[document.getElementById("caratteristiche").value]))
+    .attr("width", x.bandwidth())
+    .attr("height", d => height - y(d[document.getElementById("caratteristiche").value]))
+    .attr("fill", color(document.getElementById("caratteristiche").value))
+    .attr("class", "bar")
+    .attr('stroke-width', 0)
+    .attr("stroke", "#404040")
+    .on("mouseover", function(event, d) {
+      d3.select("#player_div")
+          .append("div")
+          .style("opacity", 0)
+          .attr("class", "tooltip")
+          .style("background-color", "white")
+          .style("border", "solid")
+          .style("border-width", "1px")
+          .style("border-radius", "5px")
+          .style("padding", "5px")
+          .style("position", "absolute")
+          .style("font-size","12px")
+          .style("font-family","Verdana")
+          .html(drawTooltip(d))
+          .style("opacity", 1)
+          
+    })
+    .on("mousemove", function(event, d) {
+      d3.select(".tooltip").style("transform","translateY(-55%)")  
+              .style("left",(event.x)/2+"px")
+              .style("top",(event.y)/2-30+"px")
+    })
+    .on("mouseleave", function(event, d) {
+      d3.select(".tooltip").remove()
+    })
+    .on('click', function(event, d) {
+      d3.selectAll(".bar").attr("opacity",0.4).attr('stroke-width', 0)
+      d3.select(this).attr("opacity",1).attr('stroke-width', 1.2)
+      d3.select(".detail").html(drawDetail(d))
+    })
 
     // Labels
     svg_1.selectAll(".text")        
@@ -183,7 +181,7 @@ function updateBarChartPlayers(data) {
       .attr("y", function(d) { return y(d[document.getElementById("caratteristiche").value]); })
       .attr("width", x.bandwidth())
       .attr("height", function(d) { return height - y(d[document.getElementById("caratteristiche").value]); })
-      .attr("fill", "#69b3a2")
+      .attr("fill", color(document.getElementById("caratteristiche").value))
       .attr("class", "bar")  
 
   // If less group in the new dataset, I delete the ones not in use anymore
@@ -237,7 +235,7 @@ svg_1.append("g")
 
 function drawXAxis2(data) {
   x_2 = d3.scaleBand()
-      .range([0, width_2])
+      .range([0, width_2 - 300])
       .domain(groups)
       .padding([0.2])
   svg_2.append("g")
@@ -269,7 +267,8 @@ function drawXAxis2Subgroup(data) {
 function drawColorAxis(data) {
   color = d3.scaleOrdinal()
     .domain(subgroups)
-    .range(["#4e79a7","#59a14f","#9c755f","#f28e2b","#edc948","#bab0ac","#e15759"])
+    // .range(["#4e79a7","#59a14f","#9c755f","#f28e2b","#edc948","#bab0ac","#e15759"])
+    .range(["#4e79a7","#76b7b2","#edc949","#af7aa1","#ff9da7","#9c755f","#bab0ab"])
 }
 
 function drawGroupedBarChartTeams(teams) {
@@ -290,6 +289,56 @@ function drawGroupedBarChartTeams(teams) {
       .attr("height", d => height_2 - y_2(d.value))
       .attr("fill", d => color(d.key))
       .attr("class","team_bar")
+
+      svg_2.append("g")
+      .selectAll("g")
+      // Enter in data = loop group per group
+      .data(teams)
+      .join("g")
+        .attr("class", "team_labels")
+        .attr("transform", d => `translate(${x_2(d.club_name)}, 0)`)
+      .selectAll("text")
+      .data(function(d) { return subgroups.map(function(key) { return {key: key, value: d[key]}; }); })
+      .join("text")
+        .attr("x", d => xSubgroup(d.key))
+        .attr("y", d => y_2(d.value) -20)
+        .attr("class","team_label")
+        .text(function(d) { return (d.value); })
+        .attr("font-size","12px")
+        .attr("font-family","Verdana")
+        .attr("dy", "1em")
+    
+
+      var legspacing = 18;
+      var legend = svg_2.selectAll(".legend")
+        .data(subgroups)
+          .enter()
+          .append("g")
+
+      legend.append("rect")
+        .attr("fill", color)
+        .attr("width", 15)
+        .attr("height", 15)
+        .attr("y", function (d, i) {
+            return i * legspacing - 30;
+        })
+        .attr("x", 600);
+
+      legend.append("text")
+          .attr("class", "label")
+          .attr("y", function (d, i) {
+              return i * legspacing - 19;
+          })
+          .attr("x", 620)
+          .attr("text-anchor", "start")
+          .attr("font-family", "Verdana")
+          .attr("font-size", "12px")
+          .text(function (d, i) {
+              return legends[i];
+          });
+
+
+
 }
 
 function updateGroupedBarChartTeams(teams) {
@@ -324,9 +373,34 @@ function updateGroupedBarChartTeams(teams) {
     .attr("fill", d => color(d.key))
     .attr("class","team_bar")
 
+    var v = svg_2.selectAll(".team_labels")
+    .data(teams)
+
+  v.enter()
+  .append("g")
+  .merge(v)
+    .attr("class", "team_labels")
+    .attr("transform", d => `translate(${x_2(d.club_name)}, 0)`)
+  .selectAll("text")
+  .data(function(d) { return subgroups.map(function(key) { return {key: key, value: d[key]}; }); })
+  // .enter()
+  // .append("rect")
+  .merge(d3.selectAll(".team_label"))
+    .transition() // and apply changes to all of them
+    .duration(3000)
+    .attr("x", d => xSubgroup(d.key))
+    .attr("y", d => y_2(d.value) - 20)
+    .attr("class","team_label")
+    .text(function(d) { return (d.value); })
+    .attr("font-size","12px")
+    .attr("font-family","Verdana")
+    .attr("dy", "1em")
+
 
   // If less group in the new dataset, I delete the ones not in use anymore
   u.exit()
+    .remove()
+  v.exit()
     .remove()
 }
 
@@ -376,7 +450,7 @@ function searchPlayers() {
     ruolo = document.getElementById("ruolo").value;
     caratteristiche = document.getElementById("caratteristiche").value;
     budget = document.getElementById("budget").value;
-    data = getFilteredPlayers(dataset, squadra, ruolo, caratteristiche, budget, 5)
+    data = getFilteredPlayers(dataset, squadra, ruolo, caratteristiche, budget, 10)
     // console.log(data)
     return data
 }
@@ -389,7 +463,7 @@ function updateSearch() {
     ruolo = document.getElementById("ruolo").value;
     caratteristiche = document.getElementById("caratteristiche").value;
     budget = document.getElementById("budget").value;
-    data = getFilteredPlayers(dataset, squadra, ruolo, caratteristiche, budget, 5)
+    data = getFilteredPlayers(dataset, squadra, ruolo, caratteristiche, budget, 10)
     // console.log(data)
     updateBarChartPlayers(data)
 }

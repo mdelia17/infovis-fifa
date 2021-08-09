@@ -4,3 +4,8 @@
     /* overflow: hidden; */
     /* width: 500px; */
 }
+
+div, label, select, option, input, button{
+    font-family: Verdana;
+    font-size: 12px
+}
