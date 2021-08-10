@@ -13,6 +13,12 @@ var groups;
 var subgroups;
 var legends;
 
+var columnHeaders;
+var innerColumns;
+
+var x0,x1,y0;
+
+
 // set the dimensions and margins of the graph
 const margin = {top: 30, right: 30, bottom: 90, left: 60},
     width = 460 - margin.left - margin.right,
@@ -39,6 +45,26 @@ const svg_2 = d3.select("#team_div")
   .append("g")
     .attr("transform",`translate(${margin_2.left},${margin_2.top})`);
 
+// append the svg object to the body of the page
+const svg_3 = d3.select("#team_div")
+  .append("svg")
+    .attr("width", width_2 + margin_2.left + margin_2.right)
+    .attr("height", height_2 + margin_2.top + margin_2.bottom)
+  .append("g")
+    .attr("transform",`translate(${margin_2.left},${margin_2.top})`);
+
+
+
+ 
+// var xAxis = d3.svg.axis()
+//     .scale(x0)
+//     .orient("bottom");
+ 
+// var yAxis = d3.svg.axis()
+//     .scale(y)
+//     .orient("left")
+//     .tickFormat(d3.format(".2s"));
+
 d3.json("data/players.json")
 	.then(function(data) {
         dataset = data;
@@ -63,10 +89,24 @@ function main(data) {
     groups = teams_to_compare.map(d => d.club_name)
     subgroups = ["punti_portiere","punti_attacco","punti_difesa","punti_tecnica","punti_velocita","punti_mentalita","punti_potenza"]
     legends = ["Portiere","Attacco","Difesa","Tecnica","Velocità","Mentalità","Potenza"]
+    
+    columnHeaders = ["punti_portiere","punti_attacco","punti_difesa","punti_tecnica","punti_velocita","punti_mentalita","punti_potenza", "punti_portiere_pos", "punti_portiere_neg", "punti_attacco_pos", "punti_attacco_neg", "punti_difesa_pos", "punti_difesa_neg", "punti_tecnica_pos", "punti_tecnica_neg", "punti_velocita_pos", "punti_velocita_neg", "punti_mentalita_pos", "punti_mentalita_neg", "punti_potenza_pos", "punti_potenza_neg"]
+    innerColumns = {
+      "Portiere" : ["punti_portiere","punti_portiere_pos", "punti_portiere_neg"],
+      "Attacco" : ["punti_attacco","punti_attacco_pos", "punti_attacco_neg"],
+      "Difesa" : ["punti_difesa","punti_difesa_pos", "punti_difesa_neg"],
+      "Tecnica" : ["punti_tecnica","punti_tecnica_pos", "punti_tecnica_neg"],
+      "Velocità" : ["punti_velocita","punti_velocita_pos", "punti_velocita_neg"],
+      "Mentalità" : ["punti_mentalita","punti_mentalita_pos", "punti_mentalita_neg"],
+      "Potenza" : ["punti_potenza","punti_potenza_pos", "punti_potenza_neg"]
+    }
+
     drawXAxis2(teams_to_compare)
     drawYAxis2(teams_to_compare)
     drawXAxis2Subgroup(teams_to_compare)
     drawColorAxis(teams_to_compare)
+
+    colorAxis(teams_to_compare)
 
     drawBarChartPlayers(players)
     document.getElementById("player_button").onclick = function() {updateSearch()}
@@ -74,6 +114,44 @@ function main(data) {
     document.getElementById("team_button").onclick = function() {compareTeams()}
 
     drawGroupedBarChartTeams(teams_to_compare)
+
+    teams_to_compare = testTeam(teams, current_team, team_2)
+
+   x0 = d3.scaleBand()
+  .range([ 0, width_2 - 300])
+  .padding(0.2);
+
+  x0.domain(teams_to_compare.map(function(d) { return d.club_name; }));
+  
+        svg_3.append("g")
+        .attr("class", "x0")
+        .attr("transform", `translate(0, ${height_2})`)
+        .call(d3.axisBottom(x0));
+    
+      svg_3.select(".x0")
+       .call(d3.axisBottom(x0))
+       .selectAll("text")
+        .attr("transform", "translate(0,5)")
+        .attr("font-family", "Verdana")
+ 
+   x1 = d3.scaleBand()
+  .range([0, x0.bandwidth()])
+  .padding([0.05]);
+
+  x1.domain(legends);
+ 
+   y0 = d3.scaleLinear()
+    .domain([0, 99])
+    .range([height_2, 0]);    
+
+    svg_3.append("g")
+    .attr("class", "y0")
+    .call(d3.axisLeft(y0))
+  .attr("font-family","Verdana")
+
+    drawStackedGroupedBarChartTeams(teams_to_compare)
+
+
 
 }
 
@@ -402,6 +480,104 @@ function updateGroupedBarChartTeams(teams) {
     .remove()
   v.exit()
     .remove()
+}
+
+function colorAxis(data) {
+  color = d3.scaleOrdinal()
+    .domain(columnHeaders)
+    .range(["#4e79a7","#76b7b2","#edc949","#af7aa1","#ff9da7","#9c755f","#bab0ab","green","red","green","red","green","red","green","red","green","red","green","red","green","red"])
+}
+
+function drawStackedGroupedBarChartTeams(data) {
+
+  x0.domain(data.map(function(d) { return d.club_name; }));
+  svg_3.select(".x0")
+       .call(d3.axisBottom(x0))
+       .selectAll("text")
+        .attr("transform", "translate(0,5)")
+        .attr("font-family", "Verdana")
+
+
+  project_stackedbar = svg_3.selectAll(".project_stackedbar")
+      .data(data)
+    .enter().append("g")
+      .attr("class", function(d){ return "g"+d.club_name})
+      .attr("transform", d => `translate(${x0(d.club_name)}, 0)`)
+ 
+  project_stackedbar.selectAll("rect")
+      .data(function(d) { return d.columnDetails; })
+    .enter().append("rect")
+      .attr("width", x1.bandwidth())
+      .attr("x", function(d) { 
+        console.log(d.column)
+        return x1(d.column);
+         })
+      .attr("y", function(d) { 
+        return y0(d.yEnd); 
+      })
+      .attr("height", function(d) { 
+        return y0(d.yBegin) - y0(d.yEnd); 
+      })
+      .attr("class", function(d) {return d.name})
+      .style("fill", function(d) { return color(d.name); });
+ 
+  // var legend = svg_3.selectAll(".legend")
+  //     .data(columnHeaders.slice().reverse())
+  //   .enter().append("g")
+  //     .attr("class", "legend")
+  //     .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
+ 
+  // legend.append("rect")
+  //     .attr("x", width - 18)
+  //     .attr("width", 18)
+  //     .attr("height", 18)
+  //     .style("fill", color);
+ 
+  // legend.append("text")
+  //     .attr("x", width - 24)
+  //     .attr("y", 9)
+  //     .attr("dy", ".35em")
+  //     .style("text-anchor", "end")
+  //     .text(function(d) { return d; });
+
+}
+
+function testTeam(data, team_1, team_2) {
+  filtered = data.filter(function(team) { return team.club_name == team_1 || team.club_name == team_2; });
+  sorted = []
+  if (filtered[0].club_name == team_1) {
+    sorted = [filtered[0], filtered[1]]
+  }
+  else {
+    sorted = [filtered[1], filtered[0]]
+  }
+  for (var i = 0; i < subgroups.length; i++) { 
+    sorted[0][subgroups[i]+"_pos"] = 5.0
+    sorted[0][subgroups[i]+"_neg"] = 5.0
+    sorted[1][subgroups[i]+"_pos"] = 5.0
+    sorted[1][subgroups[i]+"_neg"] = 5.0
+  }
+  sorted.forEach(function(d) {
+    var yColumn = new Array();
+    d.columnDetails = columnHeaders.map(function(name) {
+      for (ic in innerColumns) {
+        //if($.inArray(name, innerColumns[ic]) >= 0){
+        if(innerColumns[ic].indexOf(name) >= 0){
+          if (!yColumn[ic]){
+            yColumn[ic] = 0;
+          }
+          yBegin = yColumn[ic];
+          yColumn[ic] += +d[name];
+          return {name: name, column: ic, yBegin: yBegin, yEnd: +d[name] + yBegin,};
+        }
+      }
+    });
+    d.total = d3.max(d.columnDetails, function(d) { 
+      return d.yEnd; 
+    });
+  });
+  console.log(sorted)
+  return sorted
 }
 
 // funzione per prendere i giocatori a seconda dei filtri impostati
