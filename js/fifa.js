@@ -1,14 +1,9 @@
-var dataset; // global
+var dataset;
 var teams; 
 var x;
 var y;
 var color;
-
 var x0,x1,y0;
-
-var x_2;
-var y_2;
-var xSubgroup;
 
 var current_team;
 
@@ -21,6 +16,21 @@ var innerColumns;
 
 var highlightedPlayer = null;
 
+subgroups = ["punti_portiere","punti_attacco","punti_difesa","punti_tecnica","punti_velocita","punti_mentalita","punti_potenza"]
+legends = ["Portiere","Attacco","Difesa","Tecnica","Velocità","Mentalità","Potenza"]
+    
+columnHeaders = ["punti_portiere","punti_attacco","punti_difesa","punti_tecnica","punti_velocita","punti_mentalita","punti_potenza", "punti_portiere_pos", "punti_portiere_neg", "punti_attacco_pos", "punti_attacco_neg", "punti_difesa_pos", "punti_difesa_neg", "punti_tecnica_pos", "punti_tecnica_neg", "punti_velocita_pos", "punti_velocita_neg", "punti_mentalita_pos", "punti_mentalita_neg", "punti_potenza_pos", "punti_potenza_neg"]
+innerColumns = {
+      "Portiere" : ["punti_portiere","punti_portiere_pos", "punti_portiere_neg"],
+      "Attacco" : ["punti_attacco","punti_attacco_pos", "punti_attacco_neg"],
+      "Difesa" : ["punti_difesa","punti_difesa_pos", "punti_difesa_neg"],
+      "Tecnica" : ["punti_tecnica","punti_tecnica_pos", "punti_tecnica_neg"],
+      "Velocità" : ["punti_velocita","punti_velocita_pos", "punti_velocita_neg"],
+      "Mentalità" : ["punti_mentalita","punti_mentalita_pos", "punti_mentalita_neg"],
+      "Potenza" : ["punti_potenza","punti_potenza_pos", "punti_potenza_neg"]
+}
+
+
 // set the dimensions and margins of the graph
 const margin = {top: 30, right: 30, bottom: 90, left: 60},
     width = 460 - margin.left - margin.right,
@@ -28,7 +38,7 @@ const margin = {top: 30, right: 30, bottom: 90, left: 60},
 
 // set the dimensions and margins of the graph
 const margin_2 = {top: 30, right: 30, bottom: 90, left: 60},
-    width_2 = 1000 - margin_2.left - margin_2.right,
+    width_2 = 1800 - margin_2.left - margin_2.right,
     height_2 = 400 - margin_2.top - margin_2.bottom;
 
 // append the svg object to the body of the page
@@ -41,14 +51,6 @@ const svg_1 = d3.select("#player_div")
 
 // append the svg object to the body of the page
 const svg_2 = d3.select("#team_div")
-  .append("svg")
-    .attr("width", width_2 + margin_2.left + margin_2.right)
-    .attr("height", height_2 + margin_2.top + margin_2.bottom)
-  .append("g")
-    .attr("transform",`translate(${margin_2.left},${margin_2.top})`);
-
-// append the svg object to the body of the page
-const svg_3 = d3.select("#team_div")
   .append("svg")
     .attr("width", width_2 + margin_2.left + margin_2.right)
     .attr("height", height_2 + margin_2.top + margin_2.bottom)
@@ -74,28 +76,9 @@ function main(data) {
 
     current_team = document.getElementById("squadra").value
     team_2 = document.getElementById("squadra_avversaria").value
-
-    teams_to_compare = getFilteredTeamsToCompare(teams, current_team, team_2)
+    teams_to_compare = getFilteredTeamsToCompare(current_team, team_2)
     groups = teams_to_compare.map(d => d.club_name)
-    subgroups = ["punti_portiere","punti_attacco","punti_difesa","punti_tecnica","punti_velocita","punti_mentalita","punti_potenza"]
-    legends = ["Portiere","Attacco","Difesa","Tecnica","Velocità","Mentalità","Potenza"]
     
-    columnHeaders = ["punti_portiere","punti_attacco","punti_difesa","punti_tecnica","punti_velocita","punti_mentalita","punti_potenza", "punti_portiere_pos", "punti_portiere_neg", "punti_attacco_pos", "punti_attacco_neg", "punti_difesa_pos", "punti_difesa_neg", "punti_tecnica_pos", "punti_tecnica_neg", "punti_velocita_pos", "punti_velocita_neg", "punti_mentalita_pos", "punti_mentalita_neg", "punti_potenza_pos", "punti_potenza_neg"]
-    innerColumns = {
-      "Portiere" : ["punti_portiere","punti_portiere_pos", "punti_portiere_neg"],
-      "Attacco" : ["punti_attacco","punti_attacco_pos", "punti_attacco_neg"],
-      "Difesa" : ["punti_difesa","punti_difesa_pos", "punti_difesa_neg"],
-      "Tecnica" : ["punti_tecnica","punti_tecnica_pos", "punti_tecnica_neg"],
-      "Velocità" : ["punti_velocita","punti_velocita_pos", "punti_velocita_neg"],
-      "Mentalità" : ["punti_mentalita","punti_mentalita_pos", "punti_mentalita_neg"],
-      "Potenza" : ["punti_potenza","punti_potenza_pos", "punti_potenza_neg"]
-    }
-
-    drawXAxis2(teams_to_compare)
-    drawYAxis2(teams_to_compare)
-    drawXAxis2Subgroup(teams_to_compare)
-    drawColorAxis(teams_to_compare)
-
     colorAxis(teams_to_compare)
 
     drawBarChartPlayers(players)
@@ -103,18 +86,11 @@ function main(data) {
     document.getElementById("campionato").onchange = function() {updateTeams()}
     document.getElementById("team_button").onclick = function() {compareTeams()}
 
-    drawGroupedBarChartTeams(teams_to_compare)
-
-    teams_to_compare = testTeam(teams, current_team, team_2)
-
     drawXAxisTeam(teams_to_compare)
     drawXSubgroupAxisTeam(teams_to_compare)
     drawYAxisTeam(teams_to_compare)
 
     drawStackedGroupedBarChartTeams(teams_to_compare)
-
-
-
 }
 
 function drawBarChartPlayers(data) {
@@ -160,12 +136,15 @@ function drawBarChartPlayers(data) {
       if (highlightedPlayer == d) {
         d3.selectAll(".bar").attr("opacity",1).attr('stroke-width', 0)
         highlightedPlayer = null;
+        resetSelectedBar()
+        compareTeams()
       }
       else {
       d3.selectAll(".bar").attr("opacity",0.4).attr('stroke-width', 0)
       d3.select(this).attr("opacity",1).attr('stroke-width', 1.2)
       d3.select(".detail").html(drawDetail(d))
       highlightedPlayer = (d)
+      compareTeams()
       }
     })
 
@@ -175,12 +154,12 @@ function drawBarChartPlayers(data) {
       .enter()
       .append("text")
         .attr("class","label")
-        .attr("x", (function(d) { return x(d.short_name) + x.bandwidth()/4; }  ))
+        .attr("x", (function(d) { return x(d.short_name) + x.bandwidth()/100; }  ))
         .attr("y", function(d) { return y(d[document.getElementById("caratteristiche").value]) - 20; })
         .attr("font-size","12px")
         .attr("font-family","Verdana")
         .attr("dy", "1em")
-        .text(function(d) { return d[document.getElementById("caratteristiche").value]; });
+        .text(function(d) { return d[document.getElementById("caratteristiche").value].toFixed(1); });
 
   var detail = d3.select("#player_div")
       .append("div")
@@ -201,7 +180,6 @@ function drawBarChartPlayers(data) {
       .html("Scheda Giocatore")
       // .html(drawDetail(data[0]))
 }
-
 
 function updateBarChartPlayers(data) {
   // Update the X axis
@@ -244,12 +222,12 @@ function updateBarChartPlayers(data) {
   .transition() // and apply changes to all of them
   .duration(3000)
     .attr("class","label")
-    .attr("x", (function(d) { return x(d.short_name) + x.bandwidth()/4; }  ))
+    .attr("x", (function(d) { return x(d.short_name) + x.bandwidth()/100; }  ))
     .attr("y", function(d) { return y(d[document.getElementById("caratteristiche").value]) - 20; })
     .attr("font-size","12px")
     .attr("font-family","Verdana")
     .attr("dy", "1em")
-    .text(function(d) { return d[document.getElementById("caratteristiche").value]; }); 
+    .text(function(d) { return d[document.getElementById("caratteristiche").value].toFixed(1); }); 
 
     v.exit()
     .remove()
@@ -280,37 +258,6 @@ svg_1.append("g")
   .attr("font-family","Verdana")
 }
 
-function drawXAxis2(data) {
-  x_2 = d3.scaleBand()
-      .range([0, width_2 - 300])
-      .domain(groups)
-      .padding([0.2])
-  svg_2.append("g")
-    .attr("class", "x_axis2")
-    .attr("transform", `translate(0, ${height_2})`)
-    .call(d3.axisBottom(x_2))
-    .selectAll("text")
-      .attr("transform", "translate(0,5)")
-      .attr("font-family", "Verdana")
-}
-
-function drawYAxis2(data) {
-  y_2 = d3.scaleLinear()
-    .domain([0, 99])
-    .range([ height_2, 0 ]);
-  svg_2.append("g")
-  .attr("class", "y_axis2")
-    .call(d3.axisLeft(y_2))
-    .attr("font-family", "Verdana")
-}
-
-function drawXAxis2Subgroup(data) {
-  xSubgroup = d3.scaleBand()
-    .domain(subgroups)
-    .range([0, x_2.bandwidth()])
-    .padding([0.05])
-}
-
 function drawColorAxis(data) {
   color = d3.scaleOrdinal()
     .domain(subgroups)
@@ -325,12 +272,12 @@ function drawXAxisTeam(data) {
 
   x0.domain(teams_to_compare.map(function(d) { return d.club_name; }));
   
-  svg_3.append("g")
+  svg_2.append("g")
     .attr("class", "x0")
     .attr("transform", `translate(0, ${height_2})`)
     .call(d3.axisBottom(x0));
     
-  svg_3.select(".x0")
+  svg_2.select(".x0")
     .call(d3.axisBottom(x0))
     .selectAll("text")
     .attr("transform", "translate(0,5)")
@@ -350,171 +297,36 @@ function drawYAxisTeam(data) {
   .domain([0, 99])
   .range([height_2, 0]);    
 
-  svg_3.append("g")
+  svg_2.append("g")
   .attr("class", "y0")
   .call(d3.axisLeft(y0))
 .attr("font-family","Verdana")
 }
 
-
-function drawGroupedBarChartTeams(teams) {
-
-    svg_2.append("g")
-    .selectAll("g")
-    // Enter in data = loop group per group
-    .data(teams)
-    .join("g")
-      .attr("class", "team_bars")
-      .attr("transform", d => `translate(${x_2(d.club_name)}, 0)`)
-    .selectAll("rect")
-    .data(function(d) { return subgroups.map(function(key) { return {key: key, value: d[key]}; }); })
-    .join("rect")
-      .attr("x", d => xSubgroup(d.key))
-      .attr("y", d => y_2(d.value))
-      .attr("width", xSubgroup.bandwidth())
-      .attr("height", d => height_2 - y_2(d.value))
-      .attr("fill", d => color(d.key))
-      .attr("class","team_bar")
-
-      svg_2.append("g")
-      .selectAll("g")
-      // Enter in data = loop group per group
-      .data(teams)
-      .join("g")
-        .attr("class", "team_labels")
-        .attr("transform", d => `translate(${x_2(d.club_name)}, 0)`)
-      .selectAll("text")
-      .data(function(d) { return subgroups.map(function(key) { return {key: key, value: d[key]}; }); })
-      .join("text")
-        .attr("x", d => xSubgroup(d.key))
-        .attr("y", d => y_2(d.value) -20)
-        .attr("class","team_label")
-        .text(function(d) { return (d.value); })
-        .attr("font-size","12px")
-        .attr("font-family","Verdana")
-        .attr("dy", "1em")
-    
-
-      var legspacing = 18;
-      var legend = svg_2.selectAll(".legend")
-        .data(subgroups)
-          .enter()
-          .append("g")
-
-      legend.append("rect")
-        .attr("fill", color)
-        .attr("width", 15)
-        .attr("height", 15)
-        .attr("y", function (d, i) {
-            return i * legspacing - 30;
-        })
-        .attr("x", 600);
-
-      legend.append("text")
-          .attr("class", "label")
-          .attr("y", function (d, i) {
-              return i * legspacing - 19;
-          })
-          .attr("x", 620)
-          .attr("text-anchor", "start")
-          .attr("font-family", "Verdana")
-          .attr("font-size", "12px")
-          .text(function (d, i) {
-              return legends[i];
-          });
-
-
-
-}
-
-function updateGroupedBarChartTeams(teams) {
-   // Update the X_2 axis
-   x_2.domain(teams.map(function(d) { return d.club_name; }))
-   svg_2.select(".x_axis2")
-       .call(d3.axisBottom(x_2))
-       .selectAll("text")
-        .attr("transform", "translate(0,5)")
-        .attr("font-family", "Verdana")
-
-  // Create the u variable
-  var u = svg_2.selectAll(".team_bars")
-    .data(teams)
-
-  u.enter()
-  .append("g")
-  .merge(u)
-    .attr("class", "team_bars")
-    .attr("transform", d => `translate(${x_2(d.club_name)}, 0)`)
-  .selectAll("rect")
-  .data(function(d) { return subgroups.map(function(key) { return {key: key, value: d[key]}; }); })
-  // .enter()
-  // .append("rect")
-  .merge(d3.selectAll(".team_bar"))
-    .transition() // and apply changes to all of them
-    .duration(3000)
-    .attr("x", d => xSubgroup(d.key))
-    .attr("y", d => y_2(d.value))
-    .attr("width", xSubgroup.bandwidth())
-    .attr("height", d => height_2 - y_2(d.value))
-    .attr("fill", d => color(d.key))
-    .attr("class","team_bar")
-
-    var v = svg_2.selectAll(".team_labels")
-    .data(teams)
-
-  v.enter()
-  .append("g")
-  .merge(v)
-    .attr("class", "team_labels")
-    .attr("transform", d => `translate(${x_2(d.club_name)}, 0)`)
-  .selectAll("text")
-  .data(function(d) { return subgroups.map(function(key) { return {key: key, value: d[key]}; }); })
-  // .enter()
-  // .append("rect")
-  .merge(d3.selectAll(".team_label"))
-    .transition() // and apply changes to all of them
-    .duration(3000)
-    .attr("x", d => xSubgroup(d.key))
-    .attr("y", d => y_2(d.value) - 20)
-    .attr("class","team_label")
-    .text(function(d) { return (d.value); })
-    .attr("font-size","12px")
-    .attr("font-family","Verdana")
-    .attr("dy", "1em")
-
-
-  // If less group in the new dataset, I delete the ones not in use anymore
-  u.exit()
-    .remove()
-  v.exit()
-    .remove()
-}
-
 function colorAxis(data) {
   color = d3.scaleOrdinal()
     .domain(columnHeaders)
-    .range(["#4e79a7","#76b7b2","#edc949","#af7aa1","#ff9da7","#9c755f","#bab0ab","green","red","green","red","green","red","green","red","green","red","green","red","green","red"])
+    .range(["#4e79a7","#76b7b2","#edc949","#af7aa1","#ff9da7","#9c755f","#bab0ab","#59a14f","#e15759","#59a14f","#e15759","#59a14f","#e15759","#59a14f","#e15759","#59a14f","#e15759","#59a14f","#e15759","#59a14f","#e15759"])
 }
 
 function drawStackedGroupedBarChartTeams(data) {
 
   x0.domain(data.map(function(d) { return d.club_name; }));
-  svg_3.select(".x0")
+  svg_2.select(".x0")
        .call(d3.axisBottom(x0))
        .selectAll("text")
         .attr("transform", "translate(0,5)")
         .attr("font-family", "Verdana")
 
-
-  project_stackedbar = svg_3.selectAll(".project_stackedbar")
+  svg_2.append("g")
+  .selectAll("g")
       .data(data)
-    .enter().append("g")
-      .attr("class", function(d){ return "g"+d.club_name})
+    .join("g")
+      .attr("class", "team_stackedBars")
       .attr("transform", d => `translate(${x0(d.club_name)}, 0)`)
- 
-  project_stackedbar.selectAll("rect")
+    .selectAll("rect")
       .data(function(d) { return d.columnDetails; })
-    .enter().append("rect")
+    .join("rect")
       .attr("width", x1.bandwidth())
       .attr("x", function(d) { 
         return x1(d.column);
@@ -525,15 +337,16 @@ function drawStackedGroupedBarChartTeams(data) {
       .attr("height", function(d) { 
         return y0(d.yBegin) - y0(d.yEnd); 
       })
-      .attr("class", function(d) {return d.name})
+      // .attr("class", function(d) {return d.name})
+      .attr("class", "team_stackedBar")
       .style("fill", function(d) { return color(d.name); });
 
-  svg_3.append("g")
+  svg_2.append("g")
       .selectAll("g")
       // Enter in data = loop group per group
       .data(data)
       .join("g")
-        .attr("class", "team_labels")
+        .attr("class", "team_stackedLabels")
         .attr("transform", d => `translate(${x0(d.club_name)}, 0)`)
       .selectAll("text")
       .data(function(d) { return legends.map(function(key) {
@@ -556,14 +369,14 @@ function drawStackedGroupedBarChartTeams(data) {
       .join("text")
       .attr("x", function(d) { return x1(d.key);})
         .attr("y", d => y0(d.y) -20)
-        .attr("class","team_label")
+        .attr("class","team_stackedLabel")
         .text(function(d) { return (d.value); })
         .attr("font-size","12px")
         .attr("font-family","Verdana")
         .attr("dy", "1em")
  
         var legspacing = 18;
-        var legend = svg_3.selectAll(".legend")
+        var legend = svg_2.selectAll(".legend")
           .data(subgroups)
             .enter()
             .append("g")
@@ -589,21 +402,98 @@ function drawStackedGroupedBarChartTeams(data) {
             .text(function (d, i) {
                 return legends[i];
             });
-
 }
 
-function testTeam(data, team_1, team_2) {
-  filtered = data.filter(function(team) { return team.club_name == team_1 || team.club_name == team_2; });
+function updateStackedGroupedBarChartTeams(data) {
+  x0.domain(data.map(function(d) { return d.club_name; }));
+  svg_2.select(".x0")
+       .call(d3.axisBottom(x0))
+       .selectAll("text")
+        .attr("transform", "translate(0,5)")
+        .attr("font-family", "Verdana")
+
+  var u = svg_2.selectAll(".team_stackedBars")
+  .data(data)
+
+  u.enter()
+  .append("g")
+  .merge(u)
+    .attr("class", "team_stackedBars")
+    .attr("transform", d => `translate(${x0(d.club_name)}, 0)`)
+  .selectAll("rect")
+  .data(function(d) { return d.columnDetails; })
+  .merge(d3.selectAll(".team_stackedBar"))
+    .transition() // and apply changes to all of them
+    .duration(3000)
+      .attr("width", x1.bandwidth())
+      .attr("x", function(d) { 
+        return x1(d.column);
+         })
+      .attr("y", function(d) { 
+        return y0(d.yEnd); 
+      })
+      .attr("height", function(d) { 
+        return y0(d.yBegin) - y0(d.yEnd); 
+      })
+      // .attr("class", function(d) {return d.name})
+      .attr("class", "team_stackedBar")
+      .style("fill", function(d) { return color(d.name); });
+
+      var v = svg_2.selectAll(".team_stackedLabels")
+      .data(data)
+
+      v.enter()
+      .append("g")
+      .merge(v)
+        .attr("class", "team_stackedLabels")
+        .attr("transform", d => `translate(${x0(d.club_name)}, 0)`)
+      .selectAll("text")
+      .data(function(d) { return legends.map(function(key) {
+        let y = 0;
+        value = 0;
+        for (i in innerColumns[key]) {
+          prop = innerColumns[key][i];
+          if (prop.indexOf("_neg") >= 0) {
+            y = y + d[prop];
+            value = value - d[prop];
+          }
+          else {
+            y = y + d[prop];
+            value = value + d[prop];
+          }
+        }
+        y = y.toFixed(1)
+        value = value.toFixed(1)
+          return {key: key, value: value, y: y}; }); })
+      .merge(d3.selectAll(".team_stackedLabel"))
+      .transition() // and apply changes to all of them
+      .duration(3000)
+        .attr("x", function(d) { return x1(d.key);})
+        .attr("y", d => y0(d.y) -20)
+        .attr("class","team_stackedLabel")
+        .text(function(d) { return (d.value); })
+        .attr("font-size","12px")
+        .attr("font-family","Verdana")
+        .attr("dy", "1em")
+
+  u.exit().remove()
+  v.exit().remove()
+}
+
+function getFilteredTeamsToCompare(team_1, team_2) {
+  filtered = teams.filter(function(team) { return team.club_name == team_1 || team.club_name == team_2; });
+  var team_a = Object.create(filtered[0])
+  var team_b = Object.create(filtered[1])
   sorted = []
-  if (filtered[0].club_name == team_1) {
-    sorted = [filtered[0], filtered[1]]
+  if (team_a.club_name == team_1) {
+    sorted = [team_a, team_b]
   }
   else {
-    sorted = [filtered[1], filtered[0]]
+    sorted = [team_b, team_a]
   }
   for (var i = 0; i < subgroups.length; i++) { 
-    if (highlightedPlayer == null) {
-      let tot = ((sorted[0][subgroups[i]] * sorted[0].count) + players[0][subgroups[i]]) / (sorted[0].count + 1)
+    if (highlightedPlayer != null) {
+      let tot = ((sorted[0][subgroups[i]] * sorted[0].count) + highlightedPlayer[subgroups[i]]) / (sorted[0].count + 1)
       tot = tot.toFixed(1)
       let delta = tot - sorted[0][subgroups[i]]
       if (delta >= 0) {
@@ -611,8 +501,8 @@ function testTeam(data, team_1, team_2) {
         sorted[0][subgroups[i]+"_neg"] = 0
       }
       else {
-        sorted[0][subgroups[i]] = sorted[0][subgroups[i]] - delta
-        sorted[0][subgroups[i]+"_neg"] = -delta
+        sorted[0][subgroups[i]] = sorted[0][subgroups[i]] + delta
+        sorted[0][subgroups[i]+"_neg"] = (-delta)
         sorted[0][subgroups[i]+"_pos"] = 0  
       }
     }
@@ -675,18 +565,6 @@ function getOpponentTeams(data, campionato, squadra) {
   return filtered
 }
 
-function getFilteredTeamsToCompare(data, team_1, team_2) {
-  filtered = data.filter(function(team) { return team.club_name == team_1 || team.club_name == team_2; });
-  sorted = []
-  if (filtered[0].club_name == team_1) {
-    sorted = [filtered[0], filtered[1]]
-  }
-  else {
-    sorted = [filtered[1], filtered[0]]
-  }
-  return sorted
-}
-
 function searchPlayers() {
     squadra = document.getElementById("squadra").value;
     ruolo = document.getElementById("ruolo").value;
@@ -708,6 +586,7 @@ function updateSearch() {
     data = getFilteredPlayers(dataset, squadra, ruolo, caratteristiche, budget, 10)
     highlightedPlayer = null
     updateBarChartPlayers(data)
+    compareTeams()
 }
 
 function updateTeams() {
@@ -747,6 +626,6 @@ function resetSelectedBar() {
 
 function compareTeams() {
   opponent_team_name = document.getElementById('squadra_avversaria').value
-  teams_to_compare = getFilteredTeamsToCompare(teams, current_team, opponent_team_name)
-  updateGroupedBarChartTeams(teams_to_compare)
+  teams_to_compare = getFilteredTeamsToCompare(current_team, opponent_team_name)
+  updateStackedGroupedBarChartTeams(teams_to_compare)
 }
