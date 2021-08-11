@@ -2,9 +2,12 @@ var dataset; // global
 var teams; 
 var x;
 var y;
+var color;
+
+var x0,x1,y0;
+
 var x_2;
 var y_2;
-var color;
 var xSubgroup;
 
 var current_team;
@@ -16,8 +19,7 @@ var legends;
 var columnHeaders;
 var innerColumns;
 
-var x0,x1,y0;
-
+var highlightedPlayer = null;
 
 // set the dimensions and margins of the graph
 const margin = {top: 30, right: 30, bottom: 90, left: 60},
@@ -53,18 +55,6 @@ const svg_3 = d3.select("#team_div")
   .append("g")
     .attr("transform",`translate(${margin_2.left},${margin_2.top})`);
 
-
-
- 
-// var xAxis = d3.svg.axis()
-//     .scale(x0)
-//     .orient("bottom");
- 
-// var yAxis = d3.svg.axis()
-//     .scale(y)
-//     .orient("left")
-//     .tickFormat(d3.format(".2s"));
-
 d3.json("data/players.json")
 	.then(function(data) {
         dataset = data;
@@ -75,7 +65,7 @@ d3.json("data/players.json")
   })});
 
 function main(data) {
-    console.log(dataset)
+    // console.log(dataset)
     updateTeams()
     updateOpponentTeams()
     players = searchPlayers(dataset)
@@ -117,37 +107,9 @@ function main(data) {
 
     teams_to_compare = testTeam(teams, current_team, team_2)
 
-   x0 = d3.scaleBand()
-  .range([ 0, width_2 - 300])
-  .padding(0.2);
-
-  x0.domain(teams_to_compare.map(function(d) { return d.club_name; }));
-  
-        svg_3.append("g")
-        .attr("class", "x0")
-        .attr("transform", `translate(0, ${height_2})`)
-        .call(d3.axisBottom(x0));
-    
-      svg_3.select(".x0")
-       .call(d3.axisBottom(x0))
-       .selectAll("text")
-        .attr("transform", "translate(0,5)")
-        .attr("font-family", "Verdana")
- 
-   x1 = d3.scaleBand()
-  .range([0, x0.bandwidth()])
-  .padding([0.05]);
-
-  x1.domain(legends);
- 
-   y0 = d3.scaleLinear()
-    .domain([0, 99])
-    .range([height_2, 0]);    
-
-    svg_3.append("g")
-    .attr("class", "y0")
-    .call(d3.axisLeft(y0))
-  .attr("font-family","Verdana")
+    drawXAxisTeam(teams_to_compare)
+    drawXSubgroupAxisTeam(teams_to_compare)
+    drawYAxisTeam(teams_to_compare)
 
     drawStackedGroupedBarChartTeams(teams_to_compare)
 
@@ -195,9 +157,16 @@ function drawBarChartPlayers(data) {
       d3.select(".tooltip").remove()
     })
     .on('click', function(event, d) {
+      if (highlightedPlayer == d) {
+        d3.selectAll(".bar").attr("opacity",1).attr('stroke-width', 0)
+        highlightedPlayer = null;
+      }
+      else {
       d3.selectAll(".bar").attr("opacity",0.4).attr('stroke-width', 0)
       d3.select(this).attr("opacity",1).attr('stroke-width', 1.2)
       d3.select(".detail").html(drawDetail(d))
+      highlightedPlayer = (d)
+      }
     })
 
     // Labels
@@ -348,6 +317,45 @@ function drawColorAxis(data) {
     // .range(["#4e79a7","#59a14f","#9c755f","#f28e2b","#edc948","#bab0ac","#e15759"])
     .range(["#4e79a7","#76b7b2","#edc949","#af7aa1","#ff9da7","#9c755f","#bab0ab"])
 }
+
+function drawXAxisTeam(data) {
+  x0 = d3.scaleBand()
+  .range([ 0, width_2 - 300])
+  .padding(0.2);
+
+  x0.domain(teams_to_compare.map(function(d) { return d.club_name; }));
+  
+  svg_3.append("g")
+    .attr("class", "x0")
+    .attr("transform", `translate(0, ${height_2})`)
+    .call(d3.axisBottom(x0));
+    
+  svg_3.select(".x0")
+    .call(d3.axisBottom(x0))
+    .selectAll("text")
+    .attr("transform", "translate(0,5)")
+    .attr("font-family", "Verdana")
+}
+
+function drawXSubgroupAxisTeam(data) {
+  x1 = d3.scaleBand()
+  .range([0, x0.bandwidth()])
+  .padding([0.05]);
+
+  x1.domain(legends);
+}
+
+function drawYAxisTeam(data) {
+  y0 = d3.scaleLinear()
+  .domain([0, 99])
+  .range([height_2, 0]);    
+
+  svg_3.append("g")
+  .attr("class", "y0")
+  .call(d3.axisLeft(y0))
+.attr("font-family","Verdana")
+}
+
 
 function drawGroupedBarChartTeams(teams) {
 
@@ -509,7 +517,6 @@ function drawStackedGroupedBarChartTeams(data) {
     .enter().append("rect")
       .attr("width", x1.bandwidth())
       .attr("x", function(d) { 
-        console.log(d.column)
         return x1(d.column);
          })
       .attr("y", function(d) { 
@@ -520,25 +527,68 @@ function drawStackedGroupedBarChartTeams(data) {
       })
       .attr("class", function(d) {return d.name})
       .style("fill", function(d) { return color(d.name); });
+
+  svg_3.append("g")
+      .selectAll("g")
+      // Enter in data = loop group per group
+      .data(data)
+      .join("g")
+        .attr("class", "team_labels")
+        .attr("transform", d => `translate(${x0(d.club_name)}, 0)`)
+      .selectAll("text")
+      .data(function(d) { return legends.map(function(key) {
+        let y = 0;
+        value = 0;
+        for (i in innerColumns[key]) {
+          prop = innerColumns[key][i];
+          if (prop.indexOf("_neg") >= 0) {
+            y = y + d[prop];
+            value = value - d[prop];
+          }
+          else {
+            y = y + d[prop];
+            value = value + d[prop];
+          }
+        }
+        y = y.toFixed(1)
+        value = value.toFixed(1)
+          return {key: key, value: value, y: y}; }); })
+      .join("text")
+      .attr("x", function(d) { return x1(d.key);})
+        .attr("y", d => y0(d.y) -20)
+        .attr("class","team_label")
+        .text(function(d) { return (d.value); })
+        .attr("font-size","12px")
+        .attr("font-family","Verdana")
+        .attr("dy", "1em")
  
-  // var legend = svg_3.selectAll(".legend")
-  //     .data(columnHeaders.slice().reverse())
-  //   .enter().append("g")
-  //     .attr("class", "legend")
-  //     .attr("transform", function(d, i) { return "translate(0," + i * 20 + ")"; });
- 
-  // legend.append("rect")
-  //     .attr("x", width - 18)
-  //     .attr("width", 18)
-  //     .attr("height", 18)
-  //     .style("fill", color);
- 
-  // legend.append("text")
-  //     .attr("x", width - 24)
-  //     .attr("y", 9)
-  //     .attr("dy", ".35em")
-  //     .style("text-anchor", "end")
-  //     .text(function(d) { return d; });
+        var legspacing = 18;
+        var legend = svg_3.selectAll(".legend")
+          .data(subgroups)
+            .enter()
+            .append("g")
+  
+        legend.append("rect")
+          .attr("fill", color)
+          .attr("width", 15)
+          .attr("height", 15)
+          .attr("y", function (d, i) {
+              return i * legspacing - 30;
+          })
+          .attr("x", 600);
+  
+        legend.append("text")
+            .attr("class", "label")
+            .attr("y", function (d, i) {
+                return i * legspacing - 19;
+            })
+            .attr("x", 620)
+            .attr("text-anchor", "start")
+            .attr("font-family", "Verdana")
+            .attr("font-size", "12px")
+            .text(function (d, i) {
+                return legends[i];
+            });
 
 }
 
@@ -552,10 +602,26 @@ function testTeam(data, team_1, team_2) {
     sorted = [filtered[1], filtered[0]]
   }
   for (var i = 0; i < subgroups.length; i++) { 
-    sorted[0][subgroups[i]+"_pos"] = 5.0
-    sorted[0][subgroups[i]+"_neg"] = 5.0
-    sorted[1][subgroups[i]+"_pos"] = 5.0
-    sorted[1][subgroups[i]+"_neg"] = 5.0
+    if (highlightedPlayer == null) {
+      let tot = ((sorted[0][subgroups[i]] * sorted[0].count) + players[0][subgroups[i]]) / (sorted[0].count + 1)
+      tot = tot.toFixed(1)
+      let delta = tot - sorted[0][subgroups[i]]
+      if (delta >= 0) {
+        sorted[0][subgroups[i]+"_pos"] = delta
+        sorted[0][subgroups[i]+"_neg"] = 0
+      }
+      else {
+        sorted[0][subgroups[i]] = sorted[0][subgroups[i]] - delta
+        sorted[0][subgroups[i]+"_neg"] = -delta
+        sorted[0][subgroups[i]+"_pos"] = 0  
+      }
+    }
+    else {
+      sorted[0][subgroups[i]+"_pos"] = 0
+      sorted[0][subgroups[i]+"_neg"] = 0
+    }
+    sorted[1][subgroups[i]+"_pos"] = 0
+    sorted[1][subgroups[i]+"_neg"] = 0
   }
   sorted.forEach(function(d) {
     var yColumn = new Array();
@@ -576,7 +642,7 @@ function testTeam(data, team_1, team_2) {
       return d.yEnd; 
     });
   });
-  console.log(sorted)
+  // console.log(sorted)
   return sorted
 }
 
@@ -640,7 +706,7 @@ function updateSearch() {
     caratteristiche = document.getElementById("caratteristiche").value;
     budget = document.getElementById("budget").value;
     data = getFilteredPlayers(dataset, squadra, ruolo, caratteristiche, budget, 10)
-    // console.log(data)
+    highlightedPlayer = null
     updateBarChartPlayers(data)
 }
 
