@@ -30,16 +30,26 @@ innerColumns = {
       "Potenza" : ["punti_potenza","punti_potenza_pos", "punti_potenza_neg"]
 }
 
+mappings = {
+  "punti_portiere" : "Portiere", 
+  "punti_attacco" : "Attacco", 
+  "punti_difesa" : "Difesa", 
+  "punti_tecnica" : "Tecnica", 
+  "punti_velocita" : "Velocità", 
+  "punti_mentalita" : "Mentalità", 
+  "punti_potenza" : "Potenza"
+}
+
 
 // set the dimensions and margins of the graph
 const margin = {top: 30, right: 30, bottom: 90, left: 60},
-    width = 460 - margin.left - margin.right,
+    width = 1000 - margin.left - margin.right,
     height = 400 - margin.top - margin.bottom;
 
 // set the dimensions and margins of the graph
-const margin_2 = {top: 30, right: 30, bottom: 90, left: 60},
+const margin_2 = {top: 30, right: 30, bottom: 30, left: 60},
     width_2 = 1800 - margin_2.left - margin_2.right,
-    height_2 = 400 - margin_2.top - margin_2.bottom;
+    height_2 = 340 - margin_2.top - margin_2.bottom;
 
 // append the svg object to the body of the page
 const svg_1 = d3.select("#player_div")
@@ -54,6 +64,7 @@ const svg_2 = d3.select("#team_div")
   .append("svg")
     .attr("width", width_2 + margin_2.left + margin_2.right)
     .attr("height", height_2 + margin_2.top + margin_2.bottom)
+    // .style("border", "2px solid rgb(30, 125, 160)")
   .append("g")
     .attr("transform",`translate(${margin_2.left},${margin_2.top})`);
 
@@ -82,6 +93,7 @@ function main(data) {
     colorAxis(teams_to_compare)
 
     drawBarChartPlayers(players)
+    drawPlayerDetail()
     document.getElementById("player_button").onclick = function() {updateSearch()}
     document.getElementById("campionato").onchange = function() {updateTeams()}
     document.getElementById("team_button").onclick = function() {compareTeams()}
@@ -90,7 +102,11 @@ function main(data) {
     drawXSubgroupAxisTeam(teams_to_compare)
     drawYAxisTeam(teams_to_compare)
 
+    mean_team = findMeanTeam()
     drawStackedGroupedBarChartTeams(teams_to_compare)
+    drawLineGraph(mean_team) 
+    
+    drawTutorial()
 }
 
 function drawBarChartPlayers(data) {
@@ -154,31 +170,12 @@ function drawBarChartPlayers(data) {
       .enter()
       .append("text")
         .attr("class","label")
-        .attr("x", (function(d) { return x(d.short_name) + x.bandwidth()/100; }  ))
+        .attr("x", (function(d) { return x(d.short_name) + x.bandwidth()/4; }  ))
         .attr("y", function(d) { return y(d[document.getElementById("caratteristiche").value]) - 20; })
         .attr("font-size","12px")
         .attr("font-family","Verdana")
         .attr("dy", "1em")
         .text(function(d) { return d[document.getElementById("caratteristiche").value].toFixed(1); });
-
-  var detail = d3.select("#player_div")
-      .append("div")
-      .style("opacity", 1)
-      .attr("class", "detail")
-      .style("background-color", "white")
-      .style("border", "solid")
-      .style("border-width", "1px")
-      .style("border-radius", "5px")
-      .style("padding", "5px")
-      .style("position", "relative")
-      .style("top", "-350px")
-      .style("left" , "500px")
-      .style("width", "250px")
-      .style("height", "200px")
-      .style("font-size","12px")
-      .style("font-family","Verdana")
-      .html("Scheda Giocatore")
-      // .html(drawDetail(data[0]))
 }
 
 function updateBarChartPlayers(data) {
@@ -222,7 +219,7 @@ function updateBarChartPlayers(data) {
   .transition() // and apply changes to all of them
   .duration(3000)
     .attr("class","label")
-    .attr("x", (function(d) { return x(d.short_name) + x.bandwidth()/100; }  ))
+    .attr("x", (function(d) { return x(d.short_name) + x.bandwidth()/4; }  ))
     .attr("y", function(d) { return y(d[document.getElementById("caratteristiche").value]) - 20; })
     .attr("font-size","12px")
     .attr("font-family","Verdana")
@@ -231,6 +228,51 @@ function updateBarChartPlayers(data) {
 
     v.exit()
     .remove()
+}
+
+function drawPlayerDetail() {
+  var detail = d3.select("#player_div")
+      .append("div")
+      .style("opacity", 1)
+      .attr("class", "detail")
+      .style("background-color", "white")
+      .style("border", "solid")
+      .style("border-width", "1px")
+      .style("border-radius", "5px")
+      .style("padding", "5px")
+      .style("position", "relative")
+      .style("top", "-350px")
+      .style("left" , "1050px")
+      .style("width", "250px")
+      .style("height", "200px")
+      .style("font-size","12px")
+      .style("font-family","Verdana")
+      .style("background-color", "#FAFAFA")
+      .html("Scheda Giocatore")
+      // .html(drawDetail(data[0]))
+}
+
+function drawTutorial() {
+  // d3.select(".main")
+  // .style("opacity", 0.2)
+    var detail = d3.select("#player_div")
+        .append("div")
+        .style("opacity", 1)
+        .attr("class", "tutorial")
+        .style("background-color", "white")
+        .style("border", "solid")
+        .style("border-width", "1px")
+        .style("border-radius", "5px")
+        .style("padding", "5px")
+        .style("position", "relative")
+        .style("top", "-350px")
+        .style("left" , "1050px")
+        .style("width", "250px")
+        .style("height", "200px")
+        .style("font-size","12px")
+        .style("font-family","Verdana")
+        .style("background-color", "#FAFAFA")
+        .html("Tutorial")
 }
 
 function drawXAxis(data) {
@@ -325,7 +367,7 @@ function drawStackedGroupedBarChartTeams(data) {
       .attr("class", "team_stackedBars")
       .attr("transform", d => `translate(${x0(d.club_name)}, 0)`)
     .selectAll("rect")
-      .data(function(d) { return d.columnDetails; })
+      .data(function(d) {return d.columnDetails; })
     .join("rect")
       .attr("width", x1.bandwidth())
       .attr("x", function(d) { 
@@ -337,10 +379,11 @@ function drawStackedGroupedBarChartTeams(data) {
       .attr("height", function(d) { 
         return y0(d.yBegin) - y0(d.yEnd); 
       })
-      // .attr("class", function(d) {return d.name})
       .attr("class", "team_stackedBar")
-      .style("fill", function(d) { return color(d.name); });
-
+      .attr("id", function(d) {return d.team_name.replaceAll(" ","").replaceAll(".","").replaceAll(/[0-9]/g, '')})
+      .style("fill", function(d) { return color(d.name); })
+      
+  // Labels
   svg_2.append("g")
       .selectAll("g")
       // Enter in data = loop group per group
@@ -365,43 +408,95 @@ function drawStackedGroupedBarChartTeams(data) {
         }
         y = y.toFixed(1)
         value = value.toFixed(1)
-          return {key: key, value: value, y: y}; }); })
+          return {key: key, value: value, y: y, name: d.club_name.replaceAll(" ","").replaceAll(".","").replaceAll(/[0-9]/g, '')}; }); })
       .join("text")
-      .attr("x", function(d) { return x1(d.key);})
+        .attr("x", function(d) { return x1(d.key) + x1.bandwidth()/4;})
         .attr("y", d => y0(d.y) -20)
         .attr("class","team_stackedLabel")
+        .attr("id", function(d) {return d.name.replaceAll(" ","").replaceAll(".","").replaceAll(/[0-9]/g, '')})
         .text(function(d) { return (d.value); })
         .attr("font-size","12px")
         .attr("font-family","Verdana")
         .attr("dy", "1em")
- 
-        var legspacing = 18;
-        var legend = svg_2.selectAll(".legend")
-          .data(subgroups)
-            .enter()
-            .append("g")
+    
+    // Barre totali
+    svg_2.append("g")
+    .selectAll("g")
+    // Enter in data = loop group per group
+    .data(data)
+    .join("g")
+      .attr("class", "team_totalBars")
+      .attr("transform", d => `translate(${x0(d.club_name)}, 0)`)
+    .selectAll("rect")
+    .data(function(d) { return legends.map(function(key) {
+      let y = 0;
+      value = 0;
+      for (i in innerColumns[key]) {
+        prop = innerColumns[key][i];
+        if (prop.indexOf("_neg") >= 0) {
+          y = y + d[prop];
+          value = value - d[prop];
+        }
+        else {
+          y = y + d[prop];
+          value = value + d[prop];
+        }
+      }
+      y = y.toFixed(1)
+      value = value.toFixed(1)
+        return {key: key, value: value, y: y, name: d.club_name.replaceAll(" ","").replaceAll(".","").replaceAll(/[0-9]/g, '')}; }); })
+      .join("rect")
+        .attr("x", function(d) { return x1(d.key);})
+        .attr("y", d => y0(d.y))
+        .attr("class","team_totalBar")
+        .attr("width", x1.bandwidth())
+        .attr("height", d => height_2 - y0(d.y))
+        .attr("opacity",0)
+        .on("mouseover", function(event, d) {
+          if(d.name == current_team.replaceAll(" ","").replaceAll(".","").replaceAll(/[0-9]/g, '')) {
+            id =("#"+current_team).replaceAll(" ","").replaceAll(".","").replaceAll(/[0-9]/g, '')
+            d3.selectAll(id)
+                .style("opacity", 0.7)
+            d3.selectAll(".avg_team_line")
+                .style("opacity", 1) 
+          }
+        })
+        .on("mouseleave", function(event, d) {
+          d3.selectAll(".avg_team_line")
+              .style("opacity", 0)
+          id =("#"+current_team).replaceAll(" ","").replaceAll(".","").replaceAll(/[0-9]/g, '')
+          d3.selectAll(id)
+              .style("opacity", 1)   
+        })
   
-        legend.append("rect")
-          .attr("fill", color)
-          .attr("width", 15)
-          .attr("height", 15)
+      // Legenda
+      var legspacing = 18;
+      var legend = svg_2.selectAll(".legend")
+        .data(subgroups)
+          .enter()
+          .append("g")
+
+      legend.append("rect")
+        .attr("fill", color)
+        .attr("width", 15)
+        .attr("height", 15)
+        .attr("y", function (d, i) {
+            return i * legspacing - 30;
+        })
+        .attr("x", 1400);
+
+      legend.append("text")
+          .attr("class", "label")
           .attr("y", function (d, i) {
-              return i * legspacing - 30;
+              return i * legspacing - 19;
           })
-          .attr("x", 600);
-  
-        legend.append("text")
-            .attr("class", "label")
-            .attr("y", function (d, i) {
-                return i * legspacing - 19;
-            })
-            .attr("x", 620)
-            .attr("text-anchor", "start")
-            .attr("font-family", "Verdana")
-            .attr("font-size", "12px")
-            .text(function (d, i) {
-                return legends[i];
-            });
+          .attr("x", 1420)
+          .attr("text-anchor", "start")
+          .attr("font-family", "Verdana")
+          .attr("font-size", "12px")
+          .text(function (d, i) {
+              return legends[i];
+          });
 }
 
 function updateStackedGroupedBarChartTeams(data) {
@@ -435,9 +530,8 @@ function updateStackedGroupedBarChartTeams(data) {
       .attr("height", function(d) { 
         return y0(d.yBegin) - y0(d.yEnd); 
       })
-      // .attr("class", function(d) {return d.name})
       .attr("class", "team_stackedBar")
-      .style("fill", function(d) { return color(d.name); });
+      .attr("id", function(d) {return d.team_name.replaceAll(" ","").replaceAll(".","").replaceAll(/[0-9]/g, '')})
 
       var v = svg_2.selectAll(".team_stackedLabels")
       .data(data)
@@ -464,20 +558,110 @@ function updateStackedGroupedBarChartTeams(data) {
         }
         y = y.toFixed(1)
         value = value.toFixed(1)
-          return {key: key, value: value, y: y}; }); })
+          return {key: key, value: value, y: y, name: d.club_name.replaceAll(" ","").replaceAll(".","").replaceAll(/[0-9]/g, '')}; }); })
       .merge(d3.selectAll(".team_stackedLabel"))
       .transition() // and apply changes to all of them
       .duration(3000)
-        .attr("x", function(d) { return x1(d.key);})
+        .attr("x", function(d) { return x1(d.key) + x1.bandwidth()/4;})
         .attr("y", d => y0(d.y) -20)
         .attr("class","team_stackedLabel")
+        .attr("id", function(d) {return d.name.replaceAll(" ","").replaceAll(".","").replaceAll(/[0-9]/g, '')})
         .text(function(d) { return (d.value); })
         .attr("font-size","12px")
         .attr("font-family","Verdana")
         .attr("dy", "1em")
 
+        var z = svg_2.selectAll(".team_totalBars")
+        .data(data)
+      
+        z.enter()
+        .append("g")
+        .merge(z)
+          .attr("class", "team_totalBars")
+          .attr("transform", d => `translate(${x0(d.club_name)}, 0)`)
+        .selectAll("rect")
+        .data(function(d) { return legends.map(function(key) {
+          let y = 0;
+          value = 0;
+          for (i in innerColumns[key]) {
+            prop = innerColumns[key][i];
+            if (prop.indexOf("_neg") >= 0) {
+              y = y + d[prop];
+              value = value - d[prop];
+            }
+            else {
+              y = y + d[prop];
+              value = value + d[prop];
+            }
+          }
+          y = y.toFixed(1)
+          value = value.toFixed(1)
+            return {key: key, value: value, y: y, name: d.club_name.replaceAll(" ","").replaceAll(".","").replaceAll(/[0-9]/g, '')}; }); })
+        .merge(d3.selectAll(".team_totalBar"))
+          .transition() // and apply changes to all of them
+          .duration(3000)
+          .attr("x", function(d) { return x1(d.key);})
+          .attr("y", d => y0(d.y))
+          .attr("class","team_totalBar")
+          .attr("width", x1.bandwidth())
+          .attr("height", d => height_2 - y0(d.y))
+          .attr("opacity",0)
+
   u.exit().remove()
   v.exit().remove()
+  z.exit().remove()
+}
+
+function drawLineGraph(data) {
+  data = [data]
+  svg_2.append("g")
+  .selectAll("g")
+      .data(data)
+    .join("g")
+      .attr("class", "avg_team_lines")
+      .attr("transform", d => `translate(${x0(d.club_name)}, 0)`)
+    .selectAll("line")
+    .data(function(d) {return legends.map(function(key) { return {key: key, value: d[key]}; }); })
+    .join("line")
+      .attr("x1", function(d) {return x1(d.key)})
+      .attr("x2", function(d) {return x1(d.key) + x1.bandwidth()}) 
+      .attr("y1", function(d) {return y0(d.value); })
+      .attr("y2", function(d) {return y0(d.value); })
+      .attr("class", "avg_team_line")
+      .style("stroke", "black")
+      .style("stroke-dasharray", "3")
+      .style("opacity", "0")
+      .style("stroke-width", 2);
+}
+
+function updateLineGraph(data) {
+  data = [data]
+  var u = svg_2.selectAll(".avg_team_lines")
+  .data(data)
+
+  u.enter()
+  .append("g")
+  .merge(u)
+    .attr("class", "avg_team_lines")
+    .attr("transform", d => `translate(${x0(d.club_name)}, 0)`)
+  .selectAll("line")
+  .data(function(d) {return legends.map(function(key) { return {key: key, value: d[key]}; }); })
+  .merge(d3.selectAll(".avg_team_line"))
+    .transition()
+    .duration(3000)
+      .attr("x1", function(d) {;return x1(d.key)})
+      .attr("x2", function(d) {return x1(d.key) + x1.bandwidth()}) 
+      .attr("y1", function(d) {return y0(d.value); })
+      .attr("y2", function(d) {return y0(d.value); })
+      .attr("class", "avg_team_line")
+      .style("stroke", "black")
+      .style("stroke-dasharray", "3")
+      .style("opacity", "0")
+      .style("stroke-width", 2);
+
+    u.exit()
+    .remove()
+
 }
 
 function getFilteredTeamsToCompare(team_1, team_2) {
@@ -524,7 +708,7 @@ function getFilteredTeamsToCompare(team_1, team_2) {
           }
           yBegin = yColumn[ic];
           yColumn[ic] += +d[name];
-          return {name: name, column: ic, yBegin: yBegin, yEnd: +d[name] + yBegin,};
+          return {name: name, column: ic, yBegin: yBegin, yEnd: +d[name] + yBegin, team_name: d.club_name};
         }
       }
     });
@@ -628,4 +812,30 @@ function compareTeams() {
   opponent_team_name = document.getElementById('squadra_avversaria').value
   teams_to_compare = getFilteredTeamsToCompare(current_team, opponent_team_name)
   updateStackedGroupedBarChartTeams(teams_to_compare)
+  mean_team = findMeanTeam()
+  updateLineGraph(mean_team)
 }
+
+function getCampionato(team_name) {
+  filtered = teams.filter(function(team) { return team.club_name == team_name; });
+  return filtered[0].league_name
+}
+
+function findMeanTeam() {
+  campionato = getCampionato(current_team)
+  opponent_teams = getOpponentTeams(teams, campionato, current_team)
+  var mean_team = Object.create(opponent_teams[0])
+  for (var i = 1; i < opponent_teams.length; i++) {
+    for (j in subgroups) {
+      mean_team[subgroups[j]] = mean_team[subgroups[j]] + opponent_teams[i][subgroups[j]]
+    }
+  }
+  for (j in subgroups) {
+    mean_team[subgroups[j]] = mean_team[subgroups[j]]/opponent_teams.length
+    caratteristica = mappings[subgroups[j]]
+    mean_team[caratteristica] = mean_team[subgroups[j]].toFixed(1)
+  }
+  mean_team.club_name = current_team
+  return mean_team
+}
+

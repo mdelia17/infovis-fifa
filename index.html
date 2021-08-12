@@ -5,66 +5,69 @@
 <meta content="text/html;charset=utf-8" http-equiv="Content-Type">
 <meta content="utf-8" http-equiv="encoding">
 <link rel="stylesheet" type="text/css" href="css/style.css">
+<link rel="icon" href="resources/favicon.ico" />
 <script src="lib/d3.v6.min.js"></script>
 <script src="lib/d3.v6.js"></script>
 
 </head>
 <body>
-<div class="external1">
-<label>
-  Campionato
-  <select id="campionato">
-    <option value="English Premier League" selected>English Premier League</option>
-    <option value="French Ligue 1">French Ligue 1</option>
-    <option value="German 1. Bundesliga">German 1. Bundesliga</option>
-    <option value="Spain Primera Division">Spain Primera Division</option>
-    <option value="Italian Serie A">Italian Serie A</option>
-  </select>
+<div class="main">
+  <div class="external1">
+  <label>
+    Campionato
+    <select id="campionato">
+      <option value="English Premier League" selected>English Premier League</option>
+      <option value="French Ligue 1">French Ligue 1</option>
+      <option value="German 1. Bundesliga">German 1. Bundesliga</option>
+      <option value="Spain Primera Division">Spain Primera Division</option>
+      <option value="Italian Serie A">Italian Serie A</option>
+    </select>
 
-  Squadra
-  <select id="squadra">
-  </select>
+    Squadra
+    <select id="squadra">
+    </select>
 
-  Ruolo
-  <select id="ruolo">
-    <option value="Portiere">Portiere</option>
-    <option value="Difensore">Difensore</option>
-    <option value="Terzino Sx">Terzino Sx</option>
-    <option value="Terzino Dx">Terzino Dx</option>
-    <option value="Centrocampista">Centrocampista</option>
-    <option value="Esterno Sx">Esterno Sx</option>
-    <option value="Esterno Dx">Esterno Dx</option>
-    <option value="Attaccante" selected>Attaccante</option>
-  </select>
+    Ruolo
+    <select id="ruolo">
+      <option value="Portiere">Portiere</option>
+      <option value="Difensore">Difensore</option>
+      <option value="Terzino Sx">Terzino Sx</option>
+      <option value="Terzino Dx">Terzino Dx</option>
+      <option value="Centrocampista">Centrocampista</option>
+      <option value="Esterno Sx">Esterno Sx</option>
+      <option value="Esterno Dx">Esterno Dx</option>
+      <option value="Attaccante" selected>Attaccante</option>
+    </select>
 
-  Caratteristiche
-  <select id="caratteristiche">
-    <option value="punti_portiere">Portiere</option>
-    <option value="punti_difesa">Difesa</option>
-    <option value="punti_attacco" selected>Attacco</option>
-    <option value="punti_tecnica">Tecnica</option>
-    <option value="punti_potenza">Potenza</option>
-    <option value="punti_velocita">Velocità</option>
-    <option value="punti_mentalita">Mentalità</option>
-  </select>
+    Caratteristiche
+    <select id="caratteristiche">
+      <option value="punti_portiere">Portiere</option>
+      <option value="punti_difesa">Difesa</option>
+      <option value="punti_attacco" selected>Attacco</option>
+      <option value="punti_tecnica">Tecnica</option>
+      <option value="punti_potenza">Potenza</option>
+      <option value="punti_velocita">Velocità</option>
+      <option value="punti_mentalita">Mentalità</option>
+    </select>
 
-  Budget (€)
-  <input type="text" id="budget" value="67500000">
-  
-</label>
-<button type="button" id="player_button">Cerca</button> 
+    Budget (€)
+    <input type="text" id="budget" value="67500000">
+    
+  </label>
+  <button type="button" id="player_button">Cerca</button> 
+  </div>
+
+  <div id="player_div"></div>
+
+  <div class="external2">
+  Squadra Avversaria
+    <select id="squadra_avversaria">
+    </select>
+    <button type="button" id="team_button">Confronta</button> 
+  </div>
+
+  <div id="team_div"></div>
 </div>
-
-<div id="player_div"></div>
-
-<div class="external2">
-Squadra Avversaria
-  <select id="squadra_avversaria">
-  </select>
-  <button type="button" id="team_button">Confronta</button> 
-</div>
-
-<div id="team_div"></div>
 
 <script src="js/fifa.js"></script>
 
