@@ -16,6 +16,8 @@ var innerColumns;
 
 var highlightedPlayer = null;
 
+var tutorialSelected = false;
+
 subgroups = ["punti_portiere","punti_attacco","punti_difesa","punti_tecnica","punti_velocita","punti_mentalita","punti_potenza"]
 legends = ["Portiere","Attacco","Difesa","Tecnica","Velocità","Mentalità","Potenza"]
     
@@ -106,7 +108,7 @@ function main(data) {
     drawStackedGroupedBarChartTeams(teams_to_compare)
     drawLineGraph(mean_team) 
     
-    drawTutorial()
+    document.getElementById("tutorial_button").onclick = function() {drawTutorial()}
 }
 
 function drawBarChartPlayers(data) {
@@ -235,7 +237,6 @@ function drawPlayerDetail() {
       .append("div")
       .style("opacity", 1)
       .attr("class", "detail")
-      .style("background-color", "white")
       .style("border", "solid")
       .style("border-width", "1px")
       .style("border-radius", "5px")
@@ -247,32 +248,35 @@ function drawPlayerDetail() {
       .style("height", "200px")
       .style("font-size","12px")
       .style("font-family","Verdana")
-      .style("background-color", "#FAFAFA")
+      .style("background-color", "#F4F4F4")
       .html("Scheda Giocatore")
       // .html(drawDetail(data[0]))
 }
 
 function drawTutorial() {
-  // d3.select(".main")
-  // .style("opacity", 0.2)
-    var detail = d3.select("#player_div")
+  if (tutorialSelected == false) {
+    tutorialSelected = true
+    transparence(true)
+    var detail = d3.select("body")
         .append("div")
         .style("opacity", 1)
         .attr("class", "tutorial")
-        .style("background-color", "white")
         .style("border", "solid")
-        .style("border-width", "1px")
+        .style("border-width", "2px")
         .style("border-radius", "5px")
+        .style("border-color", "#CC0000")
         .style("padding", "5px")
-        .style("position", "relative")
-        .style("top", "-350px")
-        .style("left" , "1050px")
-        .style("width", "250px")
-        .style("height", "200px")
         .style("font-size","12px")
         .style("font-family","Verdana")
         .style("background-color", "#FAFAFA")
-        .html("Tutorial")
+        .html(tutorialText())
+  }
+  else {
+    tutorialSelected = false
+    transparence(false)
+    d3.select(".tutorial").remove()
+  }
+  
 }
 
 function drawXAxis(data) {
@@ -837,5 +841,56 @@ function findMeanTeam() {
   }
   mean_team.club_name = current_team
   return mean_team
+}
+
+function transparence(boolean) {
+  if (boolean == true) {
+    d3.select("#player_div")
+      .style("opacity", 0.2)
+    d3.select("#team_div")
+      .style("opacity", 0.2)
+    d3.select(".external2")
+      .style("opacity", 0.2)
+    d3.select("#campionato")
+      .style("opacity", 0.2)
+    d3.select("#squadra")
+      .style("opacity", 0.2)
+    d3.select("#ruolo")
+      .style("opacity", 0.2)
+    d3.select("#caratteristiche")
+      .style("opacity", 0.2)
+    d3.select("#budget")
+      .style("opacity", 0.2)
+    d3.select("#player_button")
+      .style("opacity", 0.2)
+    d3.selectAll(".etichette")
+      .style("opacity", 0.2)
+  }
+  else {
+    d3.select("#player_div")
+      .style("opacity", 1)
+    d3.select("#team_div")
+      .style("opacity", 1)
+    d3.select(".external2")
+      .style("opacity", 1)
+    d3.select("#campionato")
+      .style("opacity", 1)
+    d3.select("#squadra")
+      .style("opacity", 1)
+    d3.select("#ruolo")
+      .style("opacity", 1)
+    d3.select("#caratteristiche")
+      .style("opacity", 1)
+    d3.select("#budget")
+      .style("opacity", 1)
+    d3.select("#player_button")
+      .style("opacity", 1)
+    d3.selectAll(".etichette")
+      .style("opacity", 1)
+  }
+}
+
+function tutorialText(){
+  return "<div style=\"text-align:center; font-size:14px\"><b>Tutorial</b></div><br>Il caso d'uso affrontato riguarda la gestione degli acquisti dei giocatori da parte del manager di una squadra di calcio. In particolare, è necessario poter ricercare i calciatori sulla base di acluni attributi e valutare l'impatto che un eventuale acquisto può avere sulle caratteristiche complessive della squadra.<br><br>La visualizzazione si divide in due parti principali:<br><ol style=\"list-style-type:lower-roman\"><li>nella prima parte è possibile selezionare la squadra per cui si deve gestire il calciomercato, il ruolo del giocatore da ricercare, la caratteristica obiettivo da incrementare e il budget a disposizione. Una volta inseriti i campi, tramite il pulsante <i>Cerca</i> vengono mostrati i primi dieci calciatori che rispettano le condizioni selezionate ordinati sulla base della caratteristica obiettivo;</li><li> nella seconda parte è possibile selezionare la squadra avversaria e, tramite il pulsante <i>Confronta</i>, compararla con la squadra gestita sulla base delle caratteristiche medie dei giocatori in rosa.</li></ol>Per quanto riguarda l'interazione, la selezione tramite click di uno dei calciatori suggeriti nella prima parte genera una variazione (incremento o decremento) delle caratteristiche medie nella squadra controllata, oltre a mostrare informazioni generali di tale giocatore (dati anagrafici, ruolo, squadra di appartenenza, budget rimanente in caso di suo acquisto...). Inoltre, nella seconda parte è possibile confrontare la squadra gestita con la media delle squadre del campionato di appartenenza, posizionandosi con il cursore sopra la rappresentazione relativa alla squadra amministrata."
 }
 

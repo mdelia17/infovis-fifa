@@ -14,9 +14,46 @@ div, label, select, option, input, button{
     /* position: relative; */
     margin-left: 100px;
     margin-right:100px;
-    margin-top: 50px;
+    margin-top: 0px;
     background-color: rgb(188, 230, 190);
     padding: 10px;
     border: solid;
     border-width: 2px;
+}
+
+#tutorial_button {
+    float: right;
+}
+
+.tutorial {
+    /* margin: auto;
+    width: 60%; */
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%,-50%)
+}
+
+.title {
+    font-family: 'Corbel';
+    font-weight: bold;
+    color: rgb(30, 125, 160)
+}
+
+.credits {
+    font-family: 'Corbel';
+    font-weight: bold;
+    text-align: center;
+    margin-top: 5px;
+    margin-bottom: 0px;
+    color: #3d3c3c;
+}
+
+h1 {
+    font-family: 'Corbel';
+    font-weight: bold;
+    text-align: center;
+    margin-top: 0px;
+    margin-bottom: 5px;
+    color: rgb(56, 56, 56);
 }
